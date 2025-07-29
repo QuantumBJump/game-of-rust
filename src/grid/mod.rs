@@ -1,5 +1,5 @@
 use std::io::{Write, stdout};
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Grid {
     grid_size: usize,
     overflow: bool,
@@ -21,6 +21,15 @@ impl Grid {
         }
     }
 
+    pub fn update(&self) -> Grid {
+        let mut res = self.clone();
+        for (y, row) in self.cells.iter().enumerate() {
+            for (x, _cell) in row.iter().enumerate() {
+                res.cells[y][x].value = self.calculate_cell(x, y);
+            }
+        }
+        res
+    }
 
     pub fn calculate_cell(&self, x: usize, y: usize) -> bool {
         match self.get_neighbours(x, y) {
@@ -310,4 +319,23 @@ mod tests {
         assert_eq!(grid.calculate_cell(0, 1), false);
         assert_eq!(grid.calculate_cell(3, 1), false);
     }
+
+    #[test]
+    fn test_update() {
+        let mut grid = read_grid(vec![
+            vec![0, 1, 0, 0],
+            vec![0, 0, 1, 0],
+            vec![1, 1, 1, 0],
+            vec![0, 0, 0, 0],
+        ]).unwrap();
+        let expected = read_grid(vec![
+            vec![0, 0, 0, 0],
+            vec![1, 0, 1, 0],
+            vec![0, 1, 1, 0],
+            vec![0, 1, 0, 0],
+        ]).unwrap();
+        let result = grid.update();
+        assert_eq!(result, expected);
+    }
+
 }

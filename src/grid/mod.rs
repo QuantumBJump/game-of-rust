@@ -1,14 +1,14 @@
 
-use std::io::{stdout,Write};
-#[derive(Debug,PartialEq)]
-pub struct Grid{
+use std::io::{Write, stdout};
+#[derive(Debug, PartialEq)]
+pub struct Grid {
     grid_size: usize,
     cells: Vec<Vec<Cell>>,
 }
 
-impl Grid{
+impl Grid {
     pub fn print(&self) {
-        for row in &self.cells{
+        for row in &self.cells {
             for cell in row {
                 if cell.value {
                     print!("X")
@@ -21,13 +21,12 @@ impl Grid{
     }
 
     pub fn toggle_cell(&mut self, x: usize, y: usize) {
-        self.cells[y][x].value = !self.cells[y][x].value
-
+        self.cells[y][x].value = !self.cells[y][x].value;
     }
 
     pub fn delete(self) {
         print!("\x1b[{};A", &self.cells.len());
-        if let Err(res) =  stdout().flush() {
+        if let Err(res) = stdout().flush() {
             panic!("{res:?}")
         }
         
@@ -39,6 +38,26 @@ impl Grid{
             panic!("{res:?}")
         }
     }
+    pub fn wrap(&self, x: isize, y: isize) -> (isize, isize) {
+        let xret: isize;
+        let yret: isize;
+        if x < 0 {
+            xret = self.cells[0].len() as isize - 1;
+        } else if x >= self.cells[0].len() as isize {
+            xret = 0;
+        } else {
+            xret = x;
+        }
+
+        if y < 0 {
+            yret = self.cells.len() as isize - 1;
+        } else if y >=self.cells.len() as isize {
+            yret = 0;
+        } else {
+            yret = y;
+        }
+        (xret, yret)
+    }
 }
 
 pub fn new_grid(grid_size: usize) -> Grid {
@@ -46,11 +65,15 @@ pub fn new_grid(grid_size: usize) -> Grid {
     for i in 0..grid_size {
         let mut row: Vec<Cell> = vec![];
         for j in 0..grid_size {
-            row.push(Cell{x: j, y: i, value: false});
+            row.push(Cell {
+                x: j,
+                y: i,
+                value: false,
+            });
         }
         cells.push(row);
     }
-    Grid{
+    Grid {
         grid_size,
         cells: cells.to_vec(),
     }
@@ -64,32 +87,36 @@ pub fn read_grid(input: Vec<Vec<usize>>) -> Result<Grid, &'static str> {
     let mut cells = vec![];
     for (y, row) in input.iter().enumerate() {
         if row.len() != width {
-            return Err("mismatched row widths")
+            return Err("mismatched row widths");
         }
         let mut contents = vec![];
         for (x, char) in row.iter().enumerate() {
             match char {
-                0 => {contents.push(Cell{x, y, value: false});},
-                1 => {contents.push(Cell{x, y, value: true});},
-                _ => {return Err("invalid cell value");},
+                0 => {
+                    contents.push(Cell { x, y, value: false });
+                }
+                1 => {
+                    contents.push(Cell { x, y, value: true });
+                }
+                _ => {
+                    return Err("invalid cell value");
+                }
             }
         }
         cells.push(contents);
     }
-    Ok(Grid{
+    Ok(Grid {
         grid_size: input.len(),
         cells,
     })
 }
 
-
-#[derive(Clone,Debug, PartialEq)]
-pub struct Cell{
+#[derive(Clone, Debug, PartialEq)]
+pub struct Cell {
     x: usize,
     y: usize,
     value: bool,
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -103,7 +130,7 @@ mod tests {
             vec![0, 0, 0, 0],
         ];
         let result = read_grid(input).unwrap();
-        let expected = Grid{
+        let expected = Grid {
             grid_size: 4,
             cells: vec![
                 vec![Cell{x: 0, y: 0, value: false}, Cell{x: 1, y: 0, value: true}, Cell{x: 2, y: 0, value: false}, Cell{x: 3, y: 0, value: false}],
@@ -140,5 +167,12 @@ mod tests {
         ];
         let result = read_grid(input);
         assert_eq!(result, Err("invalid cell value"))
+    }
+
+    #[test]
+    fn test_wrap() {
+        let grid = read_grid(vec![vec![0, 1, 1], vec![0, 1, 0], vec![0, 1, 1]]).unwrap();
+        assert_eq!(grid.wrap(-1, -1), (2, 2));
+        assert_eq!(grid.wrap(3, 3), (0, 0));
     }
 }

@@ -41,8 +41,15 @@ pub fn new_grid(grid_size: usize) -> Grid {
 }
 
 pub fn read_grid(input: Vec<Vec<usize>>) -> Result<Grid, &'static str> {
+    if input.len() == 0 {
+        return Err("no values in input");
+    }
+    let width = input[0].len();
     let mut cells = vec![];
     for (y, row) in input.iter().enumerate() {
+        if row.len() != width {
+            return Err("mismatched row widths")
+        }
         let mut contents = vec![];
         for (x, char) in row.iter().enumerate() {
             match char {
@@ -90,5 +97,32 @@ mod tests {
             ],
         };
         assert_eq!(result, expected)
+    }
+
+    #[test]
+    fn test_read_grid_empty_input() {
+        let input = vec![];
+        let result = read_grid(input);
+        assert_eq!(result, Err("no values in input"));
+    }
+
+    #[test]
+    fn test_read_grid_not_square() {
+        let input = vec![
+            vec![0, 1],
+            vec![0],
+            vec![0, 0],
+        ];
+        let result = read_grid(input);
+        assert_eq!(result, Err("mismatched row widths"));
+    }
+
+    #[test]
+    fn test_read_grid_invalid_value() {
+        let input = vec![
+            vec![0, 2],
+        ];
+        let result = read_grid(input);
+        assert_eq!(result, Err("invalid cell value"))
     }
 }

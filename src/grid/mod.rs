@@ -2,6 +2,7 @@ use std::io::{Write, stdout};
 #[derive(Debug, PartialEq)]
 pub struct Grid {
     grid_size: usize,
+    overflow: bool,
     cells: Vec<Vec<Cell>>,
 }
 
@@ -39,6 +40,17 @@ impl Grid {
             panic!("{res:?}")
         }
     }
+    pub fn get_value(&self, x: isize, y: isize) -> bool {
+        if !self.in_bounds(x, y) {
+            if self.overflow {
+                let (newx, newy) = self.wrap(x, y);
+                return self.get_value(newx, newy);
+            }
+            return false;
+        }
+        self.cells[y as usize][x as usize].value.clone()
+    }
+
     pub fn in_bounds(&self, x: isize, y: isize) -> bool {
         x < self.cells[0].len() as isize && y < self.cells.len() as isize && x >= 0 && y >= 0
     }
@@ -80,6 +92,7 @@ pub fn new_grid(grid_size: usize) -> Grid {
     }
     Grid {
         grid_size,
+        overflow: false,
         cells: cells.to_vec(),
     }
 }
@@ -112,6 +125,7 @@ pub fn read_grid(input: Vec<Vec<usize>>) -> Result<Grid, &'static str> {
     }
     Ok(Grid {
         grid_size: input.len(),
+        overflow: false,
         cells,
     })
 }
@@ -131,6 +145,7 @@ mod tests {
     fn test_new_grid() {
         let expected = Grid {
             grid_size: 4,
+            overflow: false,
             cells: vec![
                 vec![Cell{x: 0, y: 0, value: false}, Cell{x: 1, y: 0, value: false}, Cell{x: 2, y: 0, value: false}, Cell{x: 3, y: 0, value: false}],
                 vec![Cell{x: 0, y: 1, value: false}, Cell{x: 1, y: 1, value: false}, Cell{x: 2, y: 1, value: false}, Cell{x: 3, y: 1, value: false}],
@@ -152,6 +167,7 @@ mod tests {
         let result = read_grid(input).unwrap();
         let expected = Grid {
             grid_size: 4,
+            overflow: false,
             cells: vec![
                 vec![Cell{x: 0, y: 0, value: false}, Cell{x: 1, y: 0, value: true}, Cell{x: 2, y: 0, value: false}, Cell{x: 3, y: 0, value: false}],
                 vec![Cell{x: 0, y: 1, value: false}, Cell{x: 1, y: 1, value: false}, Cell{x: 2, y: 1, value: false}, Cell{x: 3, y: 1, value: false}],
@@ -208,6 +224,18 @@ mod tests {
         assert_eq!(grid.in_bounds(-1, 2), false);
         assert_eq!(grid.in_bounds(3, 3), false);
         assert_eq!(grid.in_bounds(0, 0), true);
+    }
+
+    #[test]
+    fn test_get_value() {
+        let mut grid = read_grid(vec![
+            vec![0, 1, 1],
+            vec![0, 1, 0],
+            vec![0, 1, 1]]).unwrap();
+        assert_eq!(grid.get_value(0, 0), false);
+        assert_eq!(grid.get_value(-1, -1), false);
+        grid.overflow = true;
+        assert_eq!(grid.get_value(-1, -1), true);
     }
 
     #[test]

@@ -1,4 +1,5 @@
 
+use std::io::{stdout,Write};
 #[derive(Debug,PartialEq)]
 pub struct Grid{
     grid_size: usize,
@@ -6,8 +7,8 @@ pub struct Grid{
 }
 
 impl Grid{
-    pub fn print(self) {
-        for row in self.cells{
+    pub fn print(&self) {
+        for row in &self.cells{
             for cell in row {
                 if cell.value {
                     print!("X")
@@ -22,6 +23,21 @@ impl Grid{
     pub fn toggle_cell(&mut self, x: usize, y: usize) {
         self.cells[y][x].value = !self.cells[y][x].value
 
+    }
+
+    pub fn delete(self) {
+        print!("\x1b[{};A", &self.cells.len());
+        if let Err(res) =  stdout().flush() {
+            panic!("{res:?}")
+        }
+        
+        for row in &self.cells {
+            println!("{}", " ".repeat(row.len()));
+        }
+        print!("\x1b[{};A", self.cells.len());
+        if let Err(res) = stdout().flush() {
+            panic!("{res:?}")
+        }
     }
 }
 

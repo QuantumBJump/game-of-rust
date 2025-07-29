@@ -6,6 +6,7 @@ pub struct Grid {
 }
 
 impl Grid {
+    #[cfg(not(tarpaulin_include))]
     pub fn print(&self) {
         for row in &self.cells {
             for cell in row {
@@ -23,12 +24,13 @@ impl Grid {
         self.cells[y][x].value = !self.cells[y][x].value;
     }
 
+    #[cfg(not(tarpaulin_include))]
     pub fn delete(self) {
         print!("\x1b[{};A", &self.cells.len());
         if let Err(res) = stdout().flush() {
             panic!("{res:?}")
         }
-        
+
         for row in &self.cells {
             println!("{}", " ".repeat(row.len()));
         }
@@ -124,6 +126,21 @@ pub struct Cell {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_new_grid() {
+        let expected = Grid {
+            grid_size: 4,
+            cells: vec![
+                vec![Cell{x: 0, y: 0, value: false}, Cell{x: 1, y: 0, value: false}, Cell{x: 2, y: 0, value: false}, Cell{x: 3, y: 0, value: false}],
+                vec![Cell{x: 0, y: 1, value: false}, Cell{x: 1, y: 1, value: false}, Cell{x: 2, y: 1, value: false}, Cell{x: 3, y: 1, value: false}],
+                vec![Cell{x: 0, y: 2, value: false}, Cell{x: 1, y: 2, value: false}, Cell{x: 2, y: 2, value: false}, Cell{x: 3, y: 2, value: false}],
+                vec![Cell{x: 0, y: 3, value: false}, Cell{x: 1, y: 3, value: false}, Cell{x: 2, y: 3, value: false}, Cell{x: 3, y: 3, value: false}],
+            ],
+        };
+        let grid = new_grid(4);
+        assert_eq!(grid, expected);
+    }
     #[test]
     fn test_read_grid_valid() {
         let input = vec![
@@ -177,6 +194,7 @@ mod tests {
         let grid = read_grid(vec![vec![0, 1, 1], vec![0, 1, 0], vec![0, 1, 1]]).unwrap();
         assert_eq!(grid.wrap(-1, -1), (2, 2));
         assert_eq!(grid.wrap(3, 3), (0, 0));
+        assert_eq!(grid.wrap(1, 1), (1, 1));
     }
 
     #[test]
@@ -190,5 +208,20 @@ mod tests {
         assert_eq!(grid.in_bounds(-1, 2), false);
         assert_eq!(grid.in_bounds(3, 3), false);
         assert_eq!(grid.in_bounds(0, 0), true);
+    }
+
+    #[test]
+    fn test_toggle_cell() {
+        let mut grid = read_grid(vec![
+            vec![0, 1, 1],
+            vec![0, 1, 0],
+            vec![0, 1, 1]]).unwrap();
+        let expected = read_grid(vec![
+            vec![1, 1, 1],
+            vec![0, 0, 0],
+            vec![0, 1, 1]]).unwrap();
+        grid.toggle_cell(1, 1);
+        grid.toggle_cell(0, 0);
+        assert_eq!(expected, grid)
     }
 }

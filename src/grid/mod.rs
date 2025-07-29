@@ -40,6 +40,25 @@ impl Grid {
             panic!("{res:?}")
         }
     }
+
+    pub fn get_neighbours(&self, x: usize, y: usize) -> u8 {
+        // println!("getting neighbours for {x}, {y}");
+        let mut res = 0;
+        let offsets: Vec<isize> = vec![-1, 0, 1];
+        for yoff in offsets.clone() {
+            for xoff in offsets.clone() {
+                if xoff != 0 || yoff != 0 {
+                    let val = self.get_value(x as isize + xoff, y as isize + yoff);
+                    match val {
+                        true => res +=1,
+                        false => {}
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
     pub fn get_value(&self, x: isize, y: isize) -> bool {
         if !self.in_bounds(x, y) {
             if self.overflow {
@@ -211,6 +230,20 @@ mod tests {
         assert_eq!(grid.wrap(-1, -1), (2, 2));
         assert_eq!(grid.wrap(3, 3), (0, 0));
         assert_eq!(grid.wrap(1, 1), (1, 1));
+    }
+
+    #[test]
+    fn test_get_neighbours() {
+        let mut grid = read_grid(vec![
+            vec![0, 1, 1],
+            vec![0, 1, 0],
+            vec![0, 1, 1]]).unwrap();
+        assert_eq!(grid.get_neighbours(1, 1), 4);
+        assert_eq!(grid.get_neighbours(0, 0), 2);
+        assert_eq!(grid.get_neighbours(0, 1), 3);
+        assert_eq!(grid.get_neighbours(2, 1), 5);
+        grid.overflow = true;
+        assert_eq!(grid.get_neighbours(0, 1), 5);
     }
 
     #[test]

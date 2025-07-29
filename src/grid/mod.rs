@@ -1,4 +1,3 @@
-
 use std::io::{Write, stdout};
 #[derive(Debug, PartialEq)]
 pub struct Grid {
@@ -38,6 +37,10 @@ impl Grid {
             panic!("{res:?}")
         }
     }
+    pub fn in_bounds(&self, x: isize, y: isize) -> bool {
+        x < self.cells[0].len() as isize && y < self.cells.len() as isize && x >= 0 && y >= 0
+    }
+
     pub fn wrap(&self, x: isize, y: isize) -> (isize, isize) {
         let xret: isize;
         let yret: isize;
@@ -174,5 +177,18 @@ mod tests {
         let grid = read_grid(vec![vec![0, 1, 1], vec![0, 1, 0], vec![0, 1, 1]]).unwrap();
         assert_eq!(grid.wrap(-1, -1), (2, 2));
         assert_eq!(grid.wrap(3, 3), (0, 0));
+    }
+
+    #[test]
+    fn test_in_bounds() {
+        let grid = read_grid(vec![
+            vec![0, 1, 1],
+            vec![0, 1, 0],
+            vec![0, 1, 1]]).unwrap();
+        assert_eq!(grid.in_bounds(-1, -1), false);
+        assert_eq!(grid.in_bounds(1, 3), false);
+        assert_eq!(grid.in_bounds(-1, 2), false);
+        assert_eq!(grid.in_bounds(3, 3), false);
+        assert_eq!(grid.in_bounds(0, 0), true);
     }
 }

@@ -21,6 +21,16 @@ impl Grid {
         }
     }
 
+
+    pub fn calculate_cell(&self, x: usize, y: usize) -> bool {
+        match self.get_neighbours(x, y) {
+            0 | 1 => false,
+            2 => self.cells[y][x].value,
+            3 => true,
+            _ => false,
+        }
+    }
+
     pub fn toggle_cell(&mut self, x: usize, y: usize) {
         self.cells[y][x].value = !self.cells[y][x].value;
     }
@@ -284,5 +294,20 @@ mod tests {
         grid.toggle_cell(1, 1);
         grid.toggle_cell(0, 0);
         assert_eq!(expected, grid)
+    }
+
+    #[test]
+    fn test_calculate_cell() {
+        let mut grid = read_grid(vec![
+            vec![0, 0, 1, 1],
+            vec![0, 0, 0, 0],
+            vec![1, 1, 1, 1],
+            vec![0, 1, 0, 0],
+        ]).unwrap();
+        assert_eq!(grid.calculate_cell(0, 1), false);
+        assert_eq!(grid.calculate_cell(1, 0), false);
+        assert_eq!(grid.calculate_cell(1, 2), true);
+        assert_eq!(grid.calculate_cell(0, 1), false);
+        assert_eq!(grid.calculate_cell(3, 1), false);
     }
 }
